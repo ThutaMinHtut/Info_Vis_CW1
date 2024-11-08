@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Absence Visualization Experiment</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .option {
+            padding: 10px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .selected {
+            background-color: lightblue;
+            border: 2px solid blue;
+        }
+        #confirmation {
+            color: green;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Absence Visualization Experiment</h1>
+    <button id="start-button">Start Experiment</button>
+    <div id="experiment-area" style="display:none;">
+        <img id="visualization" src="" alt="Visualization" style="width:100%; max-width:600px;">
+        <h2 id="question-text"></h2>
+        <div id="options"></div>
+        <div id="confirmation"></div>
+        <button id="next-question">Next Question</button>
+    </div>
+
+    <script>
+        let startTime;
+        let questionStartTime;
+
+        $(document).ready(function() {
+            // Start experiment
+            $("#start-button").click(function() {
+                $.post("/start_experiment", function(response) {
+                    $("#start-button").hide();
+                    $("#experiment-area").show();
+                    getQuestion();
+                    startTime = Date.now(); // Track total time
+                });
+            });
+
+
+            function getQuestion() {
+                questionStartTime = Date.now(); // Track question start time
+                $("#confirmation").text(""); 
+                $.get("/get_question", function(data) {
+                    $("#visualization").attr("src", data.image_path + "?t=" + new Date().getTime());
+                    $("#question-text").text(data.question);
+                    $("#options").empty();
+
+
+                    data.options.forEach(option => {
+                        $("#options").append(`<button class="option" data-answer="${option}">${option}</button>`);
+                    });
+
+                    // Deselect previous selections when clicking a new option
+                    $(".option").click(function() {
+                        $(".option").removeClass("selected");
+                        $(this).addClass("selected");
+
+                        const answer = $(this).data("answer");
+                        const questionTime = Date.now() - questionStartTime; // Calculate time taken for this question
+                        
+                        // Store response 
+                        $.post("/submit_answer", JSON.stringify({ answer: answer, question_time: questionTime }), "json");
+
+
+                        $("#confirmation").text(`Selected answer: ${answer}`);
+                    });
+                });
+            }
+
+
+            $("#next-question").click(getQuestion);
+        });
+    </script>
+</body>
+</html>
+
