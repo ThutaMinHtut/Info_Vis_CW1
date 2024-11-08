@@ -1,11 +1,13 @@
-Flask structure
-your_file/
+File structure
+```
+your_project/
 ├── static/
-│   └── images/
+│   └── images/		
 ├── templates/
 │   └── index.html
 ├── app.py
 └── experiment_logic.py
+```
 
-Create Virtual Env and pip install flask
+Create Virtual Env and pip install flask/
 run app.py
